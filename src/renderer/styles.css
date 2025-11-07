@@ -1,10 +1,11 @@
 body { font-family: system-ui, Arial, sans-serif; margin: 0; }
 .window { padding: 12px; }
-header { border-bottom: 1px solid #ccc; margin-bottom: 8px; }
-header h1 { font-size: 16px; margin: 0 0 6px; }
+header h1 { font-size: 14px; }
 .tabs { display: flex; gap: 4px; margin-bottom: 8px; }
 .tab { flex: 1; padding: 6px 8px; cursor: pointer; border: 1px solid #888; background: #f7f7f7; }
 .tab.active { background: #e0eaff; border-color: #4a78ff; }
 .tab-content { display: none; }
 .tab-content.active { display: block; }
 button { cursor: pointer; }
+header button { border:1px solid #888; background:#f0f0f0; width:24px; height:22px; line-height:18px; padding:0; font-size:14px; }
+header button:hover { background:#ddd; }

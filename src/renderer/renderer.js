@@ -85,14 +85,21 @@ window.addEventListener('DOMContentLoaded', () => {
             const category = document.getElementById('noteCategory').value.trim();
             const icon = document.getElementById('noteIcon').value.trim();
             const sound = document.getElementById('noteSound').value.trim();
+            const hasDate = document.getElementById('hasDate').checked;
+            const dateVal = hasDate ? document.getElementById('noteDate').value : '';
+            const randomWithinHours = parseInt(document.getElementById('randomHours').value || '0', 10);
         if (!title || !time) return;
-            await window.api.addNotification({ title, body, time, repeat, category, icon, sound, enabled: true });
+            await window.api.addNotification({ title, body, time, repeat, category, icon, sound, date: dateVal, randomWithinHours, enabled: true });
         document.getElementById('noteTitle').value = '';
         document.getElementById('noteBody').value = '';
         document.getElementById('noteTime').value = '';
             document.getElementById('noteCategory').value = '';
             document.getElementById('noteIcon').value = '';
             document.getElementById('noteSound').value = '';
+                document.getElementById('noteDate').value = '';
+                document.getElementById('hasDate').checked = false;
+                document.getElementById('noteDate').style.display = 'none';
+                document.getElementById('randomHours').value = '0';
         refresh();
     });
 
@@ -147,4 +154,20 @@ window.addEventListener('DOMContentLoaded', () => {
             }
     });
     refresh();
+});
+
+// date checkbox show/hide
+document.addEventListener('DOMContentLoaded', () => {
+    const chk = document.getElementById('hasDate');
+    const inputDate = document.getElementById('noteDate');
+    if (chk && inputDate) {
+        chk.addEventListener('change', () => {
+            inputDate.style.display = chk.checked ? 'inline-block' : 'none';
+        });
+    }
+    // title bar buttons - rely on window hiding
+    const btnClose = document.getElementById('btnClose');
+    const btnMin = document.getElementById('btnMin');
+    if (btnClose) btnClose.addEventListener('click', () => window.close());
+    if (btnMin) btnMin.addEventListener('click', () => window.minimize && window.minimize());
 });

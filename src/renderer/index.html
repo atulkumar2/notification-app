@@ -9,8 +9,12 @@
   </head>
   <body>
     <div class="window">
-      <header>
-        <h1>Notification App</h1>
+      <header style="-webkit-app-region: drag; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid #ccc; padding:6px 8px;">
+        <h1 style="margin:0; font-size:14px; -webkit-app-region: no-drag;">Notification App</h1>
+        <div style="-webkit-app-region: no-drag; display:flex; gap:6px;">
+          <button id="btnMin" title="Minimize">_</button>
+          <button id="btnClose" title="Close">×</button>
+        </div>
       </header>
 
       <main>
@@ -30,6 +34,13 @@
               <option value="daily">Daily</option>
               <option value="once">Once</option>
             </select>
+            <div style="margin-top:6px">
+              <label><input type="checkbox" id="hasDate" /> Set specific date</label>
+              <input type="date" id="noteDate" style="display:none" />
+            </div>
+            <div style="margin-top:6px">
+              <label>Random within hours (0 to disable): <input type="number" id="randomHours" min="0" max="24" step="1" value="0" style="width:60px"></label>
+            </div>
             <input type="text" id="noteCategory" placeholder="Category (optional)" />
             <input type="text" id="noteIcon" placeholder="Icon path (PNG optional)" />
             <input type="text" id="noteSound" placeholder="Sound path (.wav optional)" />

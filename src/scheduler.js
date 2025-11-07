@@ -9,6 +9,14 @@ function parseHHMM(str) {
 }
 
 module.exports = function createScheduler({ onFire, getNotifications, onUpdate }) {
+  function scheduleNextRandom(note) {
+    // schedule within next randomWithinHours window, but not later than that
+    const maxH = Math.max(1, Math.min(24, Number(note.randomWithinHours || 0)));
+    const now = Date.now();
+    const deltaMs = Math.floor(Math.random() * maxH * 60 * 60 * 1000);
+    note.nextAt = now + deltaMs;
+  }
+
   function tick() {
     const now = new Date();
     const hh = now.getHours();
@@ -18,6 +26,34 @@ module.exports = function createScheduler({ onFire, getNotifications, onUpdate }
     let changed = false;
     for (const note of cfg.notifications) {
       if (!note.enabled) continue;
+      // If date specified, only trigger on that date
+      if (note.date) {
+        const d = new Date(note.date);
+        if (isFinite(d)) {
+          if (d.getFullYear() !== now.getFullYear() || d.getMonth() !== now.getMonth() || d.getDate() !== now.getDate()) {
+            continue;
+          }
+        }
+      }
+
+      const randomWindow = Number(note.randomWithinHours || 0);
+      if (randomWindow > 0) {
+        if (!note.nextAt || note.nextAt < Date.now()) {
+          scheduleNextRandom(note);
+          changed = true;
+        }
+        if (Date.now() >= note.nextAt) {
+          onFire(note);
+          if (note.repeat === 'once') {
+            note.enabled = false;
+          } else {
+            scheduleNextRandom(note);
+          }
+          changed = true;
+        }
+        continue;
+      }
+
       const parsed = parseHHMM(note.time);
       if (!parsed) continue;
       if (parsed.hh === hh && parsed.mm === mm) {

@@ -70,8 +70,8 @@ module.exports = {
     return true;
   },
   // notifications
-  addNotification({ title, body, time, repeat = 'daily', enabled = true, id, icon = '', category = '', sound = '' }) {
-    const item = { id: id || Date.now().toString(36), title, body, time, repeat, enabled, icon, category, sound };
+  addNotification({ title, body, time, repeat = 'daily', enabled = true, id, icon = '', category = '', sound = '', date = '', randomWithinHours = 0, nextAt = 0 }) {
+    const item = { id: id || Date.now().toString(36), title, body, time, repeat, enabled, icon, category, sound, date, randomWithinHours, nextAt };
     config.notifications.push(item);
     save();
     return item;
