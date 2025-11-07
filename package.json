@@ -23,17 +23,27 @@
     "productName": "Notification App",
     "asar": true,
     "nsis": {
-      "oneClick": true,
+      "oneClick": false,
       "perMachine": false,
-      "allowElevation": false,
-      "allowToChangeInstallationDirectory": false
+      "allowElevation": true,
+      "allowToChangeInstallationDirectory": true,
+      "installerIcon": "src/assets/notification_icon.ico",
+      "uninstallerIcon": "src/assets/notification_icon.ico",
+      "installerHeaderIcon": "src/assets/notification_icon.ico",
+      "artifactName": "${productName}-Setup-${version}.exe",
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
     },
     "win": {
-      "icon": "src/assets/notification_icon.ico"
+      "icon": "src/assets/notification_icon.ico",
+      "target": ["nsis"],
+      "compression": "maximum"
     },
+    "electronLanguages": ["en-US"],
     "files": [
       "src/**/*",
-      "package.json"
+      "package.json",
+      "!**/*.map"
     ],
     "directories": { "buildResources": "build" }
   }
