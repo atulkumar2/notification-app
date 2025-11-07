@@ -5,7 +5,7 @@ const path = require('path');
 const defaultConfig = {
   tasks: [],
   notifications: [],
-  settings: { version: 1, autoLaunch: false, snoozeMinutes: 5, silent: false, defaultSound: '' }
+  settings: { version: 1, autoLaunch: false, snoozeMinutes: 5 }
 };
 
 let config = { ...defaultConfig };
@@ -69,9 +69,18 @@ module.exports = {
     if (config.tasks.length !== prev) save();
     return true;
   },
+  reorderTask(fromId, toId) {
+    const fromIdx = config.tasks.findIndex(t => t.id === fromId);
+    const toIdx = config.tasks.findIndex(t => t.id === toId);
+    if (fromIdx < 0 || toIdx < 0 || fromIdx === toIdx) return false;
+    const [moved] = config.tasks.splice(fromIdx, 1);
+    config.tasks.splice(toIdx, 0, moved);
+    save();
+    return true;
+  },
   // notifications
-  addNotification({ title, body, time, repeat = 'daily', enabled = true, id, icon = '', category = '', sound = '', date = '', randomWithinHours = 0, nextAt = 0 }) {
-    const item = { id: id || Date.now().toString(36), title, body, time, repeat, enabled, icon, category, sound, date, randomWithinHours, nextAt };
+  addNotification({ title, body, time, repeat = 'daily', enabled = true, id, icon = '', category = '', date = '', randomWithinHours = 0, nextAt = 0 }) {
+    const item = { id: id || Date.now().toString(36), title, body, time, repeat, enabled, icon, category, date, randomWithinHours, nextAt };
     config.notifications.push(item);
     save();
     return item;

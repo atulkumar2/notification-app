@@ -56,11 +56,34 @@ module.exports = function createScheduler({ onFire, getNotifications, onUpdate }
 
       const parsed = parseHHMM(note.time);
       if (!parsed) continue;
+      // Additional repeat gating for weekly/monthly
+      if (note.repeat === 'weekly') {
+        if (note.date && !note.weekday) {
+          const d = new Date(note.date);
+          if (isFinite(d)) { note.weekday = d.getDay(); changed = true; }
+        }
+        if (note.weekday == null) { note.weekday = now.getDay(); changed = true; }
+        if (now.getDay() !== note.weekday) continue;
+      }
+      if (note.repeat === 'monthly') {
+        if (note.date && !note.monthday) {
+          const d = new Date(note.date);
+          if (isFinite(d)) { note.monthday = d.getDate(); changed = true; }
+        }
+        if (note.monthday == null) { note.monthday = now.getDate(); changed = true; }
+        if (now.getDate() !== note.monthday) continue;
+      }
       if (parsed.hh === hh && parsed.mm === mm) {
         onFire(note);
         if (note.repeat === 'once') {
           note.enabled = false;
           changed = true;
+        } else if (note.repeat === 'weekly') {
+          // disable for the rest of the day and rely on minute check tomorrow-next days
+          // no state needed; minute match will only happen next week on the same weekday
+        } else if (note.repeat === 'monthly') {
+          // same time & day-of-month each month; fire will occur again when date matches
+          // rely on day check below (add simple date gating)
         }
       }
     }

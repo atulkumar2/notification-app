@@ -4,33 +4,39 @@
   <meta charset="utf-8" />
   <title>Reminder</title>
   <style>
-    body { font-family: system-ui, Arial; margin: 0; padding: 10px; }
-    h1 { font-size: 16px; margin: 0 0 6px; }
-    p { margin: 0 0 10px; font-size: 13px; }
+    body { font-family: system-ui, Arial; margin: 0; padding: 12px; }
+    .card { border: 1px solid #ddd; border-radius: 10px; padding: 10px 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.15); background: #fff; }
+    .header { display:flex; align-items:center; gap:8px; margin-bottom:6px; }
+    .brand { font-weight:600; color:#4a78ff; font-size:12px; }
+    h1 { font-size: 16px; margin: 0 0 2px; }
+    p { margin: 0 0 10px; font-size: 13px; color:#333; }
     .actions { display: flex; gap: 8px; }
-    button { cursor: pointer; padding: 4px 10px; }
+    button { cursor: pointer; padding: 4px 10px; border:1px solid #aaa; background:#f7f7f7; }
+    button:hover { background:#eee; }
   </style>
 </head>
 <body>
-  <h1 id="pTitle">Reminder</h1>
-  <p id="pBody"></p>
-  <div class="actions">
-    <button id="snoozeBtn">Snooze</button>
-    <button id="dismissBtn">Dismiss</button>
+  <div class="card">
+    <div class="header"><span class="brand">Notification App</span></div>
+    <h1 id="pTitle">Reminder</h1>
+    <p id="pBody"></p>
+    <div class="actions">
+      <button id="snoozeBtn">Snooze</button>
+      <button id="dismissBtn">Dismiss</button>
+    </div>
   </div>
   <script>
-    const { ipcRenderer } = require('electron');
     let currentId = null;
-    ipcRenderer.on('popup:note', (e, note) => {
+    window.popupAPI.onNote(note => {
       currentId = note.id;
       document.getElementById('pTitle').textContent = note.title || 'Reminder';
       document.getElementById('pBody').textContent = note.body || '';
     });
     document.getElementById('snoozeBtn').addEventListener('click', () => {
-      if (currentId) ipcRenderer.send('popup:snooze', currentId);
+      if (currentId) window.popupAPI.snooze(currentId);
     });
     document.getElementById('dismissBtn').addEventListener('click', () => {
-      if (currentId) ipcRenderer.send('popup:dismiss', currentId);
+      if (currentId) window.popupAPI.dismiss(currentId);
     });
   </script>
 </body>

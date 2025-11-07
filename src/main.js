@@ -34,10 +34,15 @@ function createWindow() {
       window.hide();
     }
   });
+  window.on('closed', () => {
+    window = null;
+  });
 }
 
 function toggleWindow() {
-  if (!window) return;
+  if (!window || window.isDestroyed()) {
+    createWindow();
+  }
   if (window.isVisible()) {
     window.hide();
   } else {
@@ -89,27 +94,14 @@ app.whenReady().then(() => {
   scheduler = createScheduler({
     onFire: (note) => {
       const cfg = storage.getConfig();
-      const useSilent = cfg.settings.silent;
       const noteIcon = note.icon && fs.existsSync(note.icon) ? nativeImage.createFromPath(note.icon) : undefined;
       const toast = new Notification({
         title: note.title || 'Reminder',
         body: note.body || '',
-        silent: useSilent,
+        silent: true,
         icon: noteIcon
       });
       toast.show();
-      if (!useSilent) {
-        const soundFile = (note.sound || cfg.settings.defaultSound || '').trim();
-        if (soundFile && fs.existsSync(soundFile)) {
-          try {
-            // naive playback via system (Windows) - spawn powershell "[console]::beep" for now or use a library later
-            const { exec } = require('child_process');
-            if (soundFile.toLowerCase().endsWith('.wav')) {
-              exec(`powershell -c (New-Object Media.SoundPlayer '${soundFile.replace(/'/g, "''")}').PlaySync();`);
-            }
-          } catch {}
-        }
-      }
       showPopup(note);
     },
     getNotifications: () => storage.getConfig().notifications,
@@ -144,6 +136,7 @@ ipcMain.handle('config:import', (e, sourcePath) => storage.importConfig(sourcePa
 ipcMain.handle('tasks:add', (e, text) => storage.addTask(text));
 ipcMain.handle('tasks:toggle', (e, id) => storage.toggleTask(id));
 ipcMain.handle('tasks:delete', (e, id) => storage.deleteTask(id));
+ipcMain.handle('tasks:reorder', (e, fromId, toId) => storage.reorderTask(fromId, toId));
 
 ipcMain.handle('notes:add', (e, payload) => storage.addNotification(payload));
 ipcMain.handle('notes:update', (e, payload) => storage.updateNotification(payload));
@@ -152,6 +145,10 @@ ipcMain.handle('notes:delete', (e, id) => storage.deleteNotification(id));
 ipcMain.on('show-test-notification', () => {
   new Notification({ title: 'Test Notification', body: 'This is a sample notification.' }).show();
 });
+
+// window control from renderer
+ipcMain.on('window:hide', () => { if (window && !window.isDestroyed()) window.hide(); });
+ipcMain.on('window:minimize', () => { if (window && !window.isDestroyed()) window.minimize(); });
 
 function showPopup(note) {
   if (popupWindow && !popupWindow.isDestroyed()) {

@@ -12,25 +12,54 @@ async function refresh() {
     const notesUl = document.getElementById('notesList');
     notesUl.innerHTML = '';
     cfg.notifications.forEach(n => {
+        const titleText = n.title || '(no text)';
+        const subtitle = `${n.time || ''}${n.randomWithinHours>0?' · random≤'+n.randomWithinHours+'h':''}${n.date? ' · '+n.date: ''}`;
         const li = el('li', {}, [
-            `${n.time} ${n.title}`,
-            el('button', { onclick: () => toggleNote(n.id) }, ['Toggle']),
-            el('button', { onclick: () => deleteNote(n.id) }, ['X'])
+            el('button', { class: 'delete', title: 'Delete', onclick: () => deleteNote(n.id) }, ['X']),
+            el('div', { class: 'text left' }, [
+                el('div', { class: 'line1' }, [
+                  titleText,
+                  n.category ? ' ' : '',
+                  n.category ? el('span', { class: 'category' }, ['· ', n.category]) : null,
+                  (!n.enabled ? el('span', { class: 'badge-off' }, ['Off']) : null)
+                ].filter(Boolean)),
+                el('div', { class: 'line2', style: 'font-size:11px;color:#666' }, [subtitle])
+            ]),
+            el('button', { onclick: () => toggleNote(n.id), title: 'Enable/Disable' }, [n.enabled ? 'On' : 'Off'])
         ]);
-        if (!n.enabled) li.style.opacity = '0.5';
+        if (!n.enabled) li.style.opacity = '0.6';
         notesUl.appendChild(li);
     });
 
     const tasksUl = document.getElementById('tasksList');
     tasksUl.innerHTML = '';
-    cfg.tasks.forEach(t => {
-        const li = el('li', {}, [
-            el('input', { type: 'checkbox', checked: t.done, onchange: () => window.api.toggleTask(t.id) && setTimeout(refresh, 50) }),
-            ' ', t.text,
-            el('button', { onclick: () => window.api.deleteTask(t.id).then(refresh) }, ['X'])
-        ]);
-        tasksUl.appendChild(li);
-    });
+        cfg.tasks.forEach(t => {
+                const li = el('li', { draggable: true, dataset: { id: t.id } }, [
+                        el('button', { class: 'delete', title: 'Delete', onclick: () => window.api.deleteTask(t.id).then(refresh) }, ['X']),
+                        el('div', { class: 'text left' }, [
+                                el('label', {}, [
+                                    el('input', { type: 'checkbox', checked: t.done, onchange: () => window.api.toggleTask(t.id).then(refresh) }),
+                                    ' ', t.text
+                                ])
+                        ]),
+            el('div', { class: 'handle', title: 'Drag to reorder' }, ['⋮⋮'])
+                ]);
+                // DnD events
+                li.addEventListener('dragstart', (e) => {
+                    e.dataTransfer.setData('text/plain', t.id);
+                });
+                li.addEventListener('dragover', (e) => { e.preventDefault(); li.classList.add('drag-over'); });
+                li.addEventListener('dragleave', () => li.classList.remove('drag-over'));
+                li.addEventListener('drop', async (e) => {
+                    e.preventDefault(); li.classList.remove('drag-over');
+                    const fromId = e.dataTransfer.getData('text/plain');
+                    const toId = t.id;
+                    if (!fromId || fromId === toId) return;
+                    await window.api.reorderTask(fromId, toId);
+                    refresh();
+                });
+                tasksUl.appendChild(li);
+        });
 }
 
 async function toggleNote(id) {
@@ -75,27 +104,25 @@ window.addEventListener('DOMContentLoaded', () => {
     document.getElementById('noteForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         const title = document.getElementById('noteTitle').value.trim();
-        const body = document.getElementById('noteBody').value.trim();
         const time = document.getElementById('noteTime').value.trim();
-        if (!/^([0-1]?\d|2[0-3]):[0-5]\d$/.test(time)) {
-            alert('Please enter time in HH:MM (24h) format');
-            return;
-        }
             const repeat = document.getElementById('noteRepeat').value;
             const category = document.getElementById('noteCategory').value.trim();
-            const icon = document.getElementById('noteIcon').value.trim();
-            const sound = document.getElementById('noteSound').value.trim();
+        const icon = document.getElementById('noteIcon').value.trim();
             const hasDate = document.getElementById('hasDate').checked;
             const dateVal = hasDate ? document.getElementById('noteDate').value : '';
             const randomWithinHours = parseInt(document.getElementById('randomHours').value || '0', 10);
-        if (!title || !time) return;
-            await window.api.addNotification({ title, body, time, repeat, category, icon, sound, date: dateVal, randomWithinHours, enabled: true });
+        if (!title) return;
+        if (randomWithinHours === 0) {
+            if (!/^([0-1]?\d|2[0-3]):[0-5]\d$/.test(time)) {
+                alert('Please enter time in HH:MM (24h) format, or set Random>0 and leave time empty');
+                return;
+            }
+        }
+        await window.api.addNotification({ title, body: '', time, repeat, category, icon, date: dateVal, randomWithinHours, enabled: true });
         document.getElementById('noteTitle').value = '';
-        document.getElementById('noteBody').value = '';
         document.getElementById('noteTime').value = '';
             document.getElementById('noteCategory').value = '';
             document.getElementById('noteIcon').value = '';
-            document.getElementById('noteSound').value = '';
                 document.getElementById('noteDate').value = '';
                 document.getElementById('hasDate').checked = false;
                 document.getElementById('noteDate').style.display = 'none';
@@ -116,20 +143,14 @@ window.addEventListener('DOMContentLoaded', () => {
             });
         }
             const snooze = document.getElementById('snoozeMinutes');
-            const silent = document.getElementById('silentMode');
-            const defSound = document.getElementById('defaultSound');
             if (snooze) snooze.value = cfg.settings?.snoozeMinutes ?? 5;
-            if (silent) silent.checked = !!cfg.settings?.silent;
-            if (defSound) defSound.value = cfg.settings?.defaultSound || '';
             const btnSave = document.getElementById('btnSaveSettings');
             if (btnSave) btnSave.addEventListener('click', async () => {
                 const res = await window.api.updateSettings({
-                    snoozeMinutes: Math.max(1, Math.min(60, parseInt(snooze.value || '5', 10))),
-                    silent: !!silent.checked,
-                    defaultSound: (defSound.value || '').trim()
+                    snoozeMinutes: Math.max(1, Math.min(60, parseInt(snooze.value || '5', 10)))
                 });
                 const elStatus = document.getElementById('settingsStatus');
-                elStatus.textContent = `Saved. Snooze ${res.snoozeMinutes} min, Silent ${res.silent ? 'On' : 'Off'}`;
+                elStatus.textContent = `Saved. Snooze ${res.snoozeMinutes} min.`;
             });
             const btnExport = document.getElementById('btnExport');
             const btnImport = document.getElementById('btnImport');
@@ -168,6 +189,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // title bar buttons - rely on window hiding
     const btnClose = document.getElementById('btnClose');
     const btnMin = document.getElementById('btnMin');
-    if (btnClose) btnClose.addEventListener('click', () => window.close());
-    if (btnMin) btnMin.addEventListener('click', () => window.minimize && window.minimize());
+            if (btnClose) btnClose.addEventListener('click', () => window.api.hideWindow());
+            if (btnMin) btnMin.addEventListener('click', () => window.api.minimizeWindow());
 });
