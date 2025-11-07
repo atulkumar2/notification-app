@@ -29,6 +29,10 @@ venv/
 logs/
 *.log
 
+# Data
+data/
+*.sqlite
+
 # Editors / OS
 .vscode/
 .idea/
