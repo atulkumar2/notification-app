@@ -1,0 +1,37 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Reminder</title>
+  <style>
+    body { font-family: system-ui, Arial; margin: 0; padding: 10px; }
+    h1 { font-size: 16px; margin: 0 0 6px; }
+    p { margin: 0 0 10px; font-size: 13px; }
+    .actions { display: flex; gap: 8px; }
+    button { cursor: pointer; padding: 4px 10px; }
+  </style>
+</head>
+<body>
+  <h1 id="pTitle">Reminder</h1>
+  <p id="pBody"></p>
+  <div class="actions">
+    <button id="snoozeBtn">Snooze</button>
+    <button id="dismissBtn">Dismiss</button>
+  </div>
+  <script>
+    const { ipcRenderer } = require('electron');
+    let currentId = null;
+    ipcRenderer.on('popup:note', (e, note) => {
+      currentId = note.id;
+      document.getElementById('pTitle').textContent = note.title || 'Reminder';
+      document.getElementById('pBody').textContent = note.body || '';
+    });
+    document.getElementById('snoozeBtn').addEventListener('click', () => {
+      if (currentId) ipcRenderer.send('popup:snooze', currentId);
+    });
+    document.getElementById('dismissBtn').addEventListener('click', () => {
+      if (currentId) ipcRenderer.send('popup:dismiss', currentId);
+    });
+  </script>
+</body>
+</html>

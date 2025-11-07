@@ -1,0 +1,1 @@
+Placeholder for tray icon. Replace with a 16x16 or 24x24 PNG named tray.png for best results.
