@@ -12,20 +12,24 @@
     "lint": "echo 'No linter configured'"
   },
   "dependencies": {
+    "auto-launch": "^5.0.5"
   },
   "devDependencies": {
     "electron": "^31.0.0",
-    "electron-builder": "^24.13.3",
-    "auto-launch": "^5.0.5"
+    "electron-builder": "^24.13.3"
   },
   "build": {
     "appId": "com.ak.notificationapp",
     "productName": "Notification App",
+    "asar": true,
     "nsis": {
       "oneClick": true,
       "perMachine": false,
       "allowElevation": false,
       "allowToChangeInstallationDirectory": false
+    },
+    "win": {
+      "icon": "src/assets/notification_icon.ico"
     },
     "files": [
       "src/**/*",

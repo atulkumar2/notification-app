@@ -31,14 +31,28 @@ Usage
 - Left-click the tray icon to toggle the window.
 - Use the "Show test notification" button to verify notifications work.
 
+Packaging (Windows)
+-------------------
+
+Build an installer:
+
+```pwsh
+npm run build:win
+```
+
+Artifacts will be under `dist/`. Code signing is optional during development; if you have a cert:
+
+- `setx CSC_LINK "C:\path\to\cert.pfx"`
+- `setx CSC_KEY_PASSWORD "yourpassword"`
+
 Roadmap
 -------
 
-1. Sound & custom icons per notification.
-2. Snooze duration selection per reminder.
-3. Export/import config.
-4. System tray quick-add mini form.
-5. Linux/macOS testing & packaging.
+1. Optional per-note icon (supported) and future default branding icon.
+2. Snooze duration global setting (supported) and per-reminder override (future).
+3. Export/import config, tasks, and notifications (supported).
+4. System tray quick-add mini form (future).
+5. Linux/macOS testing & packaging (future).
 
 Development Notes
 -----------------
