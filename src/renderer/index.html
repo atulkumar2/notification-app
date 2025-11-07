@@ -27,7 +27,7 @@
         <div class="content">
         <section class="tab-content active" id="notifications">
           <h4>Notifications</h4>
-          <details class="collapsible" open>
+          <details class="collapsible">
             <summary>Add notification</summary>
             <form id="noteForm">
               <input type="text" id="noteTitle" class="full" placeholder="Text" required />
@@ -55,7 +55,7 @@
             <hr class="separator" />
           <ul id="notesList" class="list list-notes"></ul>
             <hr class="separator" />
-          <button id="testNotify" style="margin-top:8px">Show test notification</button>
+          <button id="testNotify" style="margin-top:8px">Test notification</button>
         </section>
 
         <section class="tab-content" id="tasks">
@@ -79,10 +79,17 @@
           <hr />
           <div style="margin-top:8px">
             <button id="btnExport">Export Config</button>
-            <input type="file" id="importFile" accept="application/json" style="display:none" />
             <button id="btnImport">Import Config</button>
           </div>
-          <div id="settingsStatus" style="margin-top:6px;font-size:12px;color:#555"></div>
+          <div style="margin-top:6px">
+            <button id="btnExportTasks" title="Export only tasks">Export Tasks</button>
+            <button id="btnImportTasks" title="Import tasks">Import Tasks</button>
+          </div>
+          <div style="margin-top:6px">
+            <button id="btnExportNotes" title="Export only notifications">Export Notes</button>
+            <button id="btnImportNotes" title="Import notifications">Import Notes</button>
+          </div>
+          <div id="settingsStatus" style="margin-top:8px;font-size:12px;color:#555"></div>
         </section>
         </div>
       </main>

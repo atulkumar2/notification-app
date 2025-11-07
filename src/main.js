@@ -1,4 +1,4 @@
-const { app, BrowserWindow, Tray, Menu, nativeImage, ipcMain, Notification } = require('electron');
+const { app, BrowserWindow, Tray, Menu, nativeImage, ipcMain, Notification, dialog } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const storage = require('./storage');
@@ -133,6 +133,94 @@ ipcMain.handle('settings:update', async (e, patch) => {
 });
 ipcMain.handle('config:export', (e, targetPath) => storage.exportConfig(targetPath));
 ipcMain.handle('config:import', (e, sourcePath) => storage.importConfig(sourcePath));
+ipcMain.handle('config:export:dialog', async () => {
+  const { filePath, canceled } = await dialog.showSaveDialog({
+    title: 'Export Config',
+    defaultPath: 'notification-app-config.json',
+    filters: [{ name: 'JSON', extensions: ['json'] }]
+  });
+  if (canceled || !filePath) return false;
+  return storage.exportConfig(filePath);
+});
+ipcMain.handle('config:import:dialog', async () => {
+  const { canceled, filePaths } = await dialog.showOpenDialog({
+    title: 'Import Config',
+    filters: [{ name: 'JSON', extensions: ['json'] }],
+    properties: ['openFile']
+  });
+  if (canceled || !filePaths?.[0]) return false;
+  return storage.importConfig(filePaths[0]);
+});
+
+// partial exports/imports for tasks and notifications
+ipcMain.handle('export:tasks', (e, targetPath) => {
+  const cfg = storage.getConfig();
+  fs.writeFileSync(targetPath, JSON.stringify(cfg.tasks, null, 2), 'utf-8');
+  return true;
+});
+ipcMain.handle('export:tasks:dialog', async () => {
+  const { filePath, canceled } = await dialog.showSaveDialog({
+    title: 'Export Tasks',
+    defaultPath: 'tasks.json',
+    filters: [{ name: 'JSON', extensions: ['json'] }]
+  });
+  if (canceled || !filePath) return false;
+  const cfg = storage.getConfig();
+  fs.writeFileSync(filePath, JSON.stringify(cfg.tasks, null, 2), 'utf-8');
+  return true;
+});
+ipcMain.handle('export:notes', (e, targetPath) => {
+  const cfg = storage.getConfig();
+  fs.writeFileSync(targetPath, JSON.stringify(cfg.notifications, null, 2), 'utf-8');
+  return true;
+});
+ipcMain.handle('export:notes:dialog', async () => {
+  const { filePath, canceled } = await dialog.showSaveDialog({
+    title: 'Export Notifications',
+    defaultPath: 'notifications.json',
+    filters: [{ name: 'JSON', extensions: ['json'] }]
+  });
+  if (canceled || !filePath) return false;
+  const cfg = storage.getConfig();
+  fs.writeFileSync(filePath, JSON.stringify(cfg.notifications, null, 2), 'utf-8');
+  return true;
+});
+ipcMain.handle('import:tasks', (e, sourcePath) => {
+  const tasks = JSON.parse(fs.readFileSync(sourcePath, 'utf-8'));
+  const cfg = storage.getConfig();
+  storage.setConfig({ tasks: Array.isArray(tasks) ? tasks : cfg.tasks });
+  return true;
+});
+ipcMain.handle('import:tasks:dialog', async () => {
+  const { canceled, filePaths } = await dialog.showOpenDialog({
+    title: 'Import Tasks',
+    filters: [{ name: 'JSON', extensions: ['json'] }],
+    properties: ['openFile']
+  });
+  if (canceled || !filePaths?.[0]) return false;
+  const tasks = JSON.parse(fs.readFileSync(filePaths[0], 'utf-8'));
+  const cfg = storage.getConfig();
+  storage.setConfig({ tasks: Array.isArray(tasks) ? tasks : cfg.tasks });
+  return true;
+});
+ipcMain.handle('import:notes', (e, sourcePath) => {
+  const notes = JSON.parse(fs.readFileSync(sourcePath, 'utf-8'));
+  const cfg = storage.getConfig();
+  storage.setConfig({ notifications: Array.isArray(notes) ? notes : cfg.notifications });
+  return true;
+});
+ipcMain.handle('import:notes:dialog', async () => {
+  const { canceled, filePaths } = await dialog.showOpenDialog({
+    title: 'Import Notifications',
+    filters: [{ name: 'JSON', extensions: ['json'] }],
+    properties: ['openFile']
+  });
+  if (canceled || !filePaths?.[0]) return false;
+  const notes = JSON.parse(fs.readFileSync(filePaths[0], 'utf-8'));
+  const cfg = storage.getConfig();
+  storage.setConfig({ notifications: Array.isArray(notes) ? notes : cfg.notifications });
+  return true;
+});
 ipcMain.handle('tasks:add', (e, text) => storage.addTask(text));
 ipcMain.handle('tasks:toggle', (e, id) => storage.toggleTask(id));
 ipcMain.handle('tasks:delete', (e, id) => storage.deleteTask(id));

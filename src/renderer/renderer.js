@@ -154,25 +154,37 @@ window.addEventListener('DOMContentLoaded', () => {
             });
             const btnExport = document.getElementById('btnExport');
             const btnImport = document.getElementById('btnImport');
-            const inputImport = document.getElementById('importFile');
             if (btnExport) btnExport.addEventListener('click', async () => {
-                const name = `notification-app-config-${Date.now()}.json`;
-                // simple client prompt for path: download to default via anchor if in web; here we ask user to pick save path via browser dialog isn't available
-                // Workaround: ask user to place a path via prompt
-                const target = prompt('Enter full path to save config JSON:', `C:\\Users\\${navigator.userAgent.includes('Windows') ? '' : ''}config.json`);
-                if (target) await window.api.exportConfig(target);
+                const ok = await window.api.exportConfigDialog();
+                if (ok) document.getElementById('settingsStatus').textContent = 'Config exported.';
             });
-            if (btnImport && inputImport) {
-                btnImport.addEventListener('click', () => inputImport.click());
-                inputImport.addEventListener('change', async () => {
-                    const file = inputImport.files[0];
-                    if (!file) return;
-                    // File path access is limited; in Electron, input.files[0].path is available
-                    const path = file.path;
-                    await window.api.importConfig(path);
+            if (btnImport) btnImport.addEventListener('click', async () => {
+                const ok = await window.api.importConfigDialog();
+                if (ok) {
+                    document.getElementById('settingsStatus').textContent = 'Config imported.';
                     refresh();
-                });
-            }
+                }
+            });
+            const btnExportTasks = document.getElementById('btnExportTasks');
+            const btnImportTasks = document.getElementById('btnImportTasks');
+            const btnExportNotes = document.getElementById('btnExportNotes');
+            const btnImportNotes = document.getElementById('btnImportNotes');
+            if (btnExportTasks) btnExportTasks.addEventListener('click', async () => {
+                const ok = await window.api.exportTasksDialog();
+                if (ok) document.getElementById('settingsStatus').textContent = 'Tasks exported.';
+            });
+            if (btnImportTasks) btnImportTasks.addEventListener('click', async () => {
+                const ok = await window.api.importTasksDialog();
+                if (ok) { document.getElementById('settingsStatus').textContent = 'Tasks imported.'; refresh(); }
+            });
+            if (btnExportNotes) btnExportNotes.addEventListener('click', async () => {
+                const ok = await window.api.exportNotesDialog();
+                if (ok) document.getElementById('settingsStatus').textContent = 'Notifications exported.';
+            });
+            if (btnImportNotes) btnImportNotes.addEventListener('click', async () => {
+                const ok = await window.api.importNotesDialog();
+                if (ok) { document.getElementById('settingsStatus').textContent = 'Notifications imported.'; refresh(); }
+            });
     });
     refresh();
 });
